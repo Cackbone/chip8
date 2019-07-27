@@ -17,7 +17,7 @@ pub struct VM {
     regs: [u8; 16],
 
     /// VM Stack (used to store return addresses of subroutines calls)
-    stack: [u8; 20],
+    stack: [u8; 32],
     stack_ptr: u8,
 
     /// 60HZ timers (delay timer for events and sound timer for sound effects)
@@ -28,7 +28,10 @@ pub struct VM {
     input: [bool; 16],
 
     /// 64x32 pixels display from (OxO, OxO) to (Ox3f, 0x1f)
-    display: [[bool; 64]; 32]
+    display: [[bool; 64]; 32],
+
+    // 16bits register (void pointer)
+    i: u16
 }
 
 
@@ -61,12 +64,13 @@ impl TryFrom<PathBuf> for VM {
             memory: vm_mem,
             pc: START_ADDR as u8,
             regs: [0; 16],
-            stack: [0; 20],
+            stack: [0; 32],
             stack_ptr: 0,
             delay_timer: 0,
             sound_timer: 0,
             input: [false; 16],
-            display: [[false; 64]; 32]
+            display: [[false; 64]; 32],
+            i: 0
         })
     }
 }

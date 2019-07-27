@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 use std::io;
 
 use chip8::VM::VM;
+use chip8::Instructions::Instruction;
 
 fn main() -> io::Result<()> {
     let rom_path: PathBuf = Path::new("./roms/helloworld.rom").into();
