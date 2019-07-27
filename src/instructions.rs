@@ -10,6 +10,7 @@
  *
  **/
 
+use std::cmp::PartialEq;
 use std::string::ToString;
 use strum_macros::{ Display };
 
@@ -122,6 +123,9 @@ pub enum Instruction {
     /// Load from memory at I
     LoadFromMemory { x: u8 },
 
+    /// End of program
+    EndOfProgram,
+
     /// Unknown
     UnknownInstruction
 }
@@ -137,6 +141,7 @@ impl From<(u8, u8)> for Instruction {
         );
 
         match splitted {
+            (0x0, 0x0, 0x0, 0x0) => Instruction::EndOfProgram,
             (0x0, 0x0, 0xE, 0x0) => Instruction::Clear,
             (0x0, 0x0, 0xE, 0xE) => Instruction::Return,
             (0x0, n1, n2, n3) => Instruction::CallProgram { addr: Instruction::address_from(n1, n2, n3) },
@@ -186,6 +191,11 @@ impl From<u16> for Instruction {
     }
 }
 
+impl PartialEq for Instruction {
+    fn eq(&self, other: &Self) -> bool {
+        self.to_string() == other.to_string()
+    }
+}
 
 impl Instruction {
     fn value_from(n1: u8, n2: u8) -> u8 {
@@ -196,6 +206,7 @@ impl Instruction {
         (((n1 as u16) << 8) & 0xF00) | Instruction::value_from(n2, n3) as u16
     }
 }
+
 
 #[cfg(test)]
 mod tests {

@@ -6,12 +6,14 @@ use std::fmt;
 
 const START_ADDR: usize = 0x200;
 
+use crate::instructions::{ Instruction };
+
 #[allow(non_snake_case)]
 pub struct VM {
 
     /// 4KB VM memory
     memory: [u8; 4096],
-    pc: u8,
+    pc: usize,
 
     /// VM Registers V0 to VF,  VF = carry flag
     regs: [u8; 16],
@@ -30,12 +32,38 @@ pub struct VM {
     /// 64x32 pixels display from (OxO, OxO) to (Ox3f, 0x1f)
     display: [[bool; 64]; 32],
 
-    // 16bits register (void pointer)
-    i: u16
+    /// 16bits address register (void pointer)
+    i: u16,
+
+    /// State of vm (on/off)
+    state: bool
 }
 
 
 impl VM {
+    pub fn update_key_state(&mut self, key: usize, state: bool) -> Result<(), &'static str> {
+        if key > 15 {
+            return Err("Chip8 doesn't support this key.");
+        }
+        self.input[key] = state;
+        Ok(())
+    }
+
+    pub fn execute_next(&mut self) -> Result<Instruction, &'static str> {
+        let bytes = (self.memory[self.pc], self.memory[self.pc + 1]);
+        let instruction = Instruction::from(bytes);
+
+        if instruction == Instruction::EndOfProgram {
+            self.state = false;
+        } else {
+            self.pc += 2;
+        }
+        Ok(instruction)
+    }
+
+    pub fn run(&self) -> bool {
+        return self.state;
+    }
 }
 
 /// Dump memory
@@ -62,7 +90,7 @@ impl TryFrom<PathBuf> for VM {
 
         Ok(VM {
             memory: vm_mem,
-            pc: START_ADDR as u8,
+            pc: START_ADDR,
             regs: [0; 16],
             stack: [0; 32],
             stack_ptr: 0,
@@ -70,7 +98,8 @@ impl TryFrom<PathBuf> for VM {
             sound_timer: 0,
             input: [false; 16],
             display: [[false; 64]; 32],
-            i: 0
+            i: 0,
+            state: true
         })
     }
 }
