@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 use std::convert::TryFrom;
 use std::fs::File;
-use std::io::{ self, Read };
+use std::io::{ self, Read, ErrorKind };
 use std::fmt;
+use log::{ info, error };
 
 const START_ADDR: usize = 0x200;
 
@@ -19,8 +20,8 @@ pub struct VM {
     regs: [u8; 16],
 
     /// VM Stack (used to store return addresses of subroutines calls)
-    stack: [u8; 32],
-    stack_ptr: u8,
+    stack: [usize; 32],
+    stack_ptr: usize,
 
     /// 60HZ timers (delay timer for events and sound timer for sound effects)
     delay_timer: u8,
@@ -43,26 +44,54 @@ pub struct VM {
 impl VM {
     pub fn update_key_state(&mut self, key: usize, state: bool) -> Result<(), &'static str> {
         if key > 15 {
-            return Err("Chip8 doesn't support this key.");
+            return Err("Key not supported");
         }
         self.input[key] = state;
         Ok(())
     }
 
-    pub fn execute_next(&mut self) -> Result<Instruction, &'static str> {
+    pub fn run(&self) -> bool {
+        return self.state;
+    }
+
+    pub fn execute_next(&mut self) -> Result<Instruction, io::Error> {
         let bytes = (self.memory[self.pc], self.memory[self.pc + 1]);
         let instruction = Instruction::from(bytes);
 
         if instruction == Instruction::EndOfProgram {
             self.state = false;
-        } else {
-            self.pc += 2;
+            return Ok(instruction);
         }
+
+        match instruction {
+            Instruction::Clear => self.clear(),
+            Instruction::Return => self.return_subroutine(),
+            _ => {
+                error!("Error: (0x{:X}{:X} -> {}) Bad instruction", bytes.0, bytes.1, instruction);
+                return Err(io::Error::new(ErrorKind::Interrupted, "Bad instruction"));
+            }
+        }
+
+        info!("Instruction \"{}\" executed", instruction);
+        self.pc += 2;
         Ok(instruction)
     }
 
-    pub fn run(&self) -> bool {
-        return self.state;
+
+    /// Instructions \\\
+
+    fn clear(&mut self) {
+        self.display = [[false; 64]; 32]
+    }
+
+    fn return_subroutine(&mut self) {
+        self.pc = self.stack[self.stack_ptr];
+
+        if self.stack_ptr == 0 {
+            self.state = false;
+        } else {
+            self.stack_ptr -= 1;
+        }
     }
 }
 

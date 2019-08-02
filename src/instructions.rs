@@ -11,6 +11,7 @@
  **/
 
 use std::cmp::PartialEq;
+use std::fmt;
 use std::string::ToString;
 use strum_macros::{ Display };
 
@@ -182,6 +183,7 @@ impl From<(u8, u8)> for Instruction {
     }
 }
 
+
 impl From<u16> for Instruction {
     fn from(bytes: u16) -> Self {
         Instruction::from((
@@ -191,11 +193,20 @@ impl From<u16> for Instruction {
     }
 }
 
+
 impl PartialEq for Instruction {
     fn eq(&self, other: &Self) -> bool {
         self.to_string() == other.to_string()
     }
 }
+
+
+impl fmt::Debug for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 
 impl Instruction {
     fn value_from(n1: u8, n2: u8) -> u8 {
@@ -215,12 +226,12 @@ mod tests {
     #[test]
     fn test_u16_to_instruction() {
         let instruction = Instruction::from(0x00E0);
-        assert_eq!(instruction.to_string(), Instruction::Clear.to_string());
+        assert_eq!(instruction, Instruction::Clear);
     }
 
     #[test]
     fn test_2xu8_to_instruction() {
         let instruction = Instruction::from((0x0, 0xE0));
-        assert_eq!(instruction.to_string(), Instruction::Clear.to_string());
+        assert_eq!(instruction, Instruction::Clear);
     }
 }
