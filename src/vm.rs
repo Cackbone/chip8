@@ -66,13 +66,35 @@ impl VM {
         match instruction {
             Instruction::Clear => self.clear(),
             Instruction::Return => self.return_subroutine(),
+            Instruction::Goto { addr } => self.goto(addr),
+            Instruction::CallSubroutine { addr } => self.call_subroutine(addr),
+            Instruction::SkipEqualU8 { x, value } => self.skip_equal(self.regs[x as usize], value),
+            Instruction::SkipNotEqualU8 { x, value } => self.skip_not_equal(self.regs[x as usize], value),
+            Instruction::SkipEqualReg { x, y } => self.skip_equal(self.regs[x as usize], self.regs[y as usize]),
+            Instruction::SetFromU8 { x, value } => self.load(x, value),
+            Instruction::AddU8 { x, value } => self.add(x, value),
+            Instruction::SetFromReg { x, y } => self.load(x, self.regs[y as usize]),
+            Instruction::OrReg { x, y } => self.or(x, y),
+            Instruction::AndReg { x, y } => self.and(x, y),
+            Instruction::XorReg { x, y } => self.xor(x, y),
+            Instruction::AddReg { x, y } => self.add(x, self.regs[y as usize]),
+            Instruction::SubReg { x, y } => self.sub(x, y),
+            Instruction::RevSubReg { x, y } => self.revsub(x, y),
             _ => {
-                error!("Error: (0x{:X}{:X} -> {}) Bad instruction", bytes.0, bytes.1, instruction);
-                return Err(io::Error::new(ErrorKind::Interrupted, "Bad instruction"));
+                error!(
+                    "Error: (0x{:X}{:X} -> {}) Bad instruction",
+                    bytes.0,
+                    bytes.1,
+                    instruction
+                );
+                return Err(io::Error::new(
+                    ErrorKind::Interrupted,
+                    "Bad instruction"
+                ));
             }
         }
 
-        info!("Instruction \"{}\" executed", instruction);
+        info!("(0x{:X}{:X} -> {}) Instruction executed", bytes.0, bytes.1, instruction);
         self.pc += 2;
         Ok(instruction)
     }
@@ -93,12 +115,80 @@ impl VM {
             self.stack_ptr -= 1;
         }
     }
+
+    fn goto(&mut self, addr: u16) {
+        self.pc = addr as usize;
+    }
+
+    fn call_subroutine(&mut self, addr: u16) {
+        self.stack_ptr += 1;
+        self.stack[self.stack_ptr] = self.pc;
+        self.pc = addr as usize;
+    }
+
+    fn skip_equal(&mut self, v1: u8, v2: u8) {
+        if v1 == v2 {
+            self.pc += 2;
+        }
+    }
+
+    fn skip_not_equal(&mut self, v1: u8, v2: u8) {
+        if v1 != v2 {
+            self.pc += 2;
+        }
+    }
+
+    fn load(&mut self, idx: u8, value: u8) {
+        self.regs[idx as usize] = value;
+    }
+
+    fn add(&mut self, idx: u8, value: u8) {
+        self.regs[idx as usize] += value;
+    }
+
+    fn sub(&mut self, x: u8, y: u8) {
+        let ix = x as usize;
+        let iy = y as usize;
+        let last = self.regs.len() - 1;
+
+        self.regs[ix] -= self.regs[iy];
+        self.regs[last] = if self.regs[ix] > self.regs[iy] { 1 } else  { 0 }
+    }
+
+    fn revsub(&mut self, x: u8, y: u8) {
+        let ix = x as usize;
+        let iy = y as usize;
+        let last = self.regs.len() - 1;
+
+        self.regs[ix] = self.regs[iy] - self.regs[ix];
+        self.regs[last] = if self.regs[ix] > self.regs[iy] { 1 } else  { 0 }
+    }
+
+    fn or(&mut self, x: u8, y: u8) {
+        let idx = x as usize;
+        self.regs[idx] = self.regs[idx] | self.regs[y as usize];
+    }
+
+    fn and(&mut self, x: u8, y: u8) {
+        let idx = x as usize;
+        self.regs[idx] = self.regs[idx] & self.regs[y as usize];
+    }
+
+    fn xor(&mut self, x: u8, y: u8) {
+        let idx = x as usize;
+        self.regs[idx] = self.regs[idx] ^ self.regs[y as usize];
+    }
 }
 
 /// Dump memory
 impl fmt::Debug for VM {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Memory:")?;
         for byte in self.memory.iter() {
+            write!(f, "{:X} ", byte)?;
+        }
+        write!(f, "\n\nRegisters: ")?;
+        for byte in self.regs.iter() {
             write!(f, "{:X} ", byte)?;
         }
         Ok(())
