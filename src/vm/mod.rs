@@ -3,11 +3,14 @@ use std::convert::TryFrom;
 use std::fs::File;
 use std::io::{ self, Read, ErrorKind };
 use std::fmt;
+
 use log::{ info, error };
 
-const START_ADDR: usize = 0x200;
-
 use crate::instructions::{ Instruction };
+
+mod vm_instructions;
+
+const START_ADDR: usize = 0x200;
 
 #[allow(non_snake_case)]
 pub struct VM {
