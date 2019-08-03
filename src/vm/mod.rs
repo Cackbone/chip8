@@ -66,8 +66,14 @@ impl VM {
             self.state = false;
             return Ok(instruction);
         }
+        self.execute(&instruction, bytes)?;
+        info!("(0x{:X}{:X} -> {}) Instruction executed", bytes.0, bytes.1, instruction);
+        self.pc += 2;
+        Ok(instruction)
+    }
 
-        match instruction {
+    fn execute(&mut self, instruction: &Instruction, bytes: (u8, u8)) -> Result<(), io::Error> {
+        match *instruction {
             Instruction::Clear => self.clear(),
             Instruction::Return => self.return_subroutine(),
             Instruction::Goto { addr } => self.goto(addr),
@@ -99,10 +105,7 @@ impl VM {
                 ));
             }
         }
-
-        info!("(0x{:X}{:X} -> {}) Instruction executed", bytes.0, bytes.1, instruction);
-        self.pc += 2;
-        Ok(instruction)
+        Ok(())
     }
 }
 
