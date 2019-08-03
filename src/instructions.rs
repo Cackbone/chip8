@@ -68,13 +68,13 @@ pub enum Instruction {
     SubReg { x: u8, y: u8 },
 
     /// Stores the least significant bit of VX in VF and then shifts VX to the right by 1
-    ShiftRight { x: u8, y: u8 },
+    ShiftRight { x: u8 },
 
     /// Sets VX to VY minus VX, VF is set to 1 when there's a carry and to 0 when there isn't
     RevSubReg { x: u8, y: u8 },
 
     /// Stores the most significant bit of VX in VF and then shifts VX to the left by 1
-    ShiftLeft { x: u8, y: u8 },
+    ShiftLeft { x: u8 },
 
     /// Skips the next instruction if VX equal VY
     SkipNotEqualReg { x: u8, y: u8 },
@@ -159,9 +159,9 @@ impl From<(u8, u8)> for Instruction {
             (0x8, x, y, 0x3) => Instruction::XorReg { x, y },
             (0x8, x, y, 0x4) => Instruction::AddReg { x, y },
             (0x8, x, y, 0x5) => Instruction::SubReg { x, y },
-            (0x8, x, y, 0x6) => Instruction::ShiftRight { x, y },
+            (0x8, x, _, 0x6) => Instruction::ShiftRight { x },
             (0x8, x, y, 0x7) => Instruction::RevSubReg { x, y },
-            (0x8, x, y, 0xE) => Instruction::ShiftLeft { x, y },
+            (0x8, x, _, 0xE) => Instruction::ShiftLeft { x },
             (0x9, x, y, 0x0) => Instruction::SkipNotEqualReg { x, y },
             (0xA, n1, n2, n3) => Instruction::StoreAddress { addr: Instruction::address_from(n1, n2, n3) },
             (0xB, n1, n2, n3) => Instruction::JumpToAddress { addr: Instruction::address_from(n1, n2, n3) },

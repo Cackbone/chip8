@@ -14,7 +14,8 @@ pub trait VmInstructions {
     fn or(&mut self, x: u8, y: u8);
     fn and(&mut self, x: u8, y: u8);
     fn xor(&mut self, x: u8, y: u8);
-    fn shift_right(&mut self, x: u8, y: u8);
+    fn shift_right(&mut self, x: u8);
+    fn shift_left(&mut self, x: u8);
 }
 
 impl VmInstructions for VM {
@@ -95,10 +96,22 @@ impl VmInstructions for VM {
         self.regs[idx] = self.regs[idx] ^ self.regs[y as usize];
     }
 
-    fn shift_right(&mut self, x: u8, y: u8) {
+    fn shift_right(&mut self, x: u8) {
         let ix = x as usize;
-        let iy = y as usize;
         let last = self.regs.len() - 1;
+
+        // Set carry to lsb of Vx
+        self.regs[last] = self.regs[ix] & 1;
+        self.regs[ix] >>= 1;
+    }
+
+    fn shift_left(&mut self, x: u8) {
+        let ix = x as usize;
+        let last = self.regs.len() - 1;
+
+        // Set carry to lsb of Vx
+        self.regs[last] = self.regs[ix] & 1;
+        self.regs[ix] <<= 1;
     }
 }
 

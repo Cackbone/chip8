@@ -9,6 +9,7 @@ use log::{ info, error };
 use crate::instructions::{ Instruction };
 
 mod vm_instructions;
+use vm_instructions::*;
 
 const START_ADDR: usize = 0x200;
 
@@ -83,6 +84,8 @@ impl VM {
             Instruction::AddReg { x, y } => self.add(x, self.regs[y as usize]),
             Instruction::SubReg { x, y } => self.sub(x, y),
             Instruction::RevSubReg { x, y } => self.revsub(x, y),
+            Instruction::ShiftRight { x } => self.shift_right(x),
+            Instruction::ShiftLeft { x } => self.shift_left(x),
             _ => {
                 error!(
                     "Error: (0x{:X}{:X} -> {}) Bad instruction",
@@ -100,86 +103,6 @@ impl VM {
         info!("(0x{:X}{:X} -> {}) Instruction executed", bytes.0, bytes.1, instruction);
         self.pc += 2;
         Ok(instruction)
-    }
-
-
-    /// Instructions \\\
-
-    fn clear(&mut self) {
-        self.display = [[false; 64]; 32]
-    }
-
-    fn return_subroutine(&mut self) {
-        self.pc = self.stack[self.stack_ptr];
-
-        if self.stack_ptr == 0 {
-            self.state = false;
-        } else {
-            self.stack_ptr -= 1;
-        }
-    }
-
-    fn goto(&mut self, addr: u16) {
-        self.pc = addr as usize;
-    }
-
-    fn call_subroutine(&mut self, addr: u16) {
-        self.stack_ptr += 1;
-        self.stack[self.stack_ptr] = self.pc;
-        self.pc = addr as usize;
-    }
-
-    fn skip_equal(&mut self, v1: u8, v2: u8) {
-        if v1 == v2 {
-            self.pc += 2;
-        }
-    }
-
-    fn skip_not_equal(&mut self, v1: u8, v2: u8) {
-        if v1 != v2 {
-            self.pc += 2;
-        }
-    }
-
-    fn load(&mut self, idx: u8, value: u8) {
-        self.regs[idx as usize] = value;
-    }
-
-    fn add(&mut self, idx: u8, value: u8) {
-        self.regs[idx as usize] += value;
-    }
-
-    fn sub(&mut self, x: u8, y: u8) {
-        let ix = x as usize;
-        let iy = y as usize;
-        let last = self.regs.len() - 1;
-
-        self.regs[ix] -= self.regs[iy];
-        self.regs[last] = if self.regs[ix] > self.regs[iy] { 1 } else  { 0 }
-    }
-
-    fn revsub(&mut self, x: u8, y: u8) {
-        let ix = x as usize;
-        let iy = y as usize;
-        let last = self.regs.len() - 1;
-
-        self.regs[ix] = self.regs[iy] - self.regs[ix];
-        self.regs[last] = if self.regs[ix] > self.regs[iy] { 1 } else  { 0 }
-    }
-
-    fn or(&mut self, x: u8, y: u8) {
-        let idx = x as usize;
-        self.regs[idx] = self.regs[idx] | self.regs[y as usize];
-    }
-
-    fn and(&mut self, x: u8, y: u8) {
-        let idx = x as usize;
-        self.regs[idx] = self.regs[idx] & self.regs[y as usize];
-    }
-
-    fn xor(&mut self, x: u8, y: u8) {
-        let idx = x as usize;
-        self.regs[idx] = self.regs[idx] ^ self.regs[y as usize];
     }
 }
 
