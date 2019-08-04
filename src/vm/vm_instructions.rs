@@ -24,9 +24,10 @@ pub trait VmInstructions {
     fn draw(&mut self, x: u8, y: u8, nibble: u8);
     fn skip_key_pressed(&mut self, x: u8);
     fn skip_not_key_pressed(&mut self, x: u8);
-    fn store_delay_timer(&mut self, x: u8);
+    fn set_delay_timer(&mut self, x: u8);
     fn wait_key_pressed(&mut self, x: u8);
-    fn store_sound_timer(&mut self, x: u8);
+    fn set_sound_timer(&mut self, x: u8);
+    fn store_delay_timer(&mut self, x: u8);
     fn increment_addr_reg(&mut self, x: u8);
     fn store_sprite_addr(&mut self, x: u8);
     fn bcd(&mut self, x: u8);
@@ -145,7 +146,6 @@ impl VmInstructions for VM {
 
     fn draw(&mut self, x: u8, y: u8, nibble: u8) {
         // todo
-        println!("draw");
     }
 
     fn skip_key_pressed(&mut self, x: u8) {
@@ -164,17 +164,20 @@ impl VmInstructions for VM {
         }
     }
 
-    fn store_delay_timer(&mut self, x: u8) {
-        self.regs[x as usize] = self.delay_timer;
+    fn set_delay_timer(&mut self, x: u8) {
+        self.delay_timer = self.regs[x as usize];
     }
 
     fn wait_key_pressed(&mut self, x: u8) {
         // todo
-        println!("wait key");
     }
 
-    fn store_sound_timer(&mut self, x: u8) {
-        self.regs[x as usize] = self.sound_timer;
+    fn set_sound_timer(&mut self, x: u8) {
+        self.sound_timer = self.regs[x as usize];
+    }
+
+    fn store_delay_timer(&mut self, x: u8) {
+        self.regs[x as usize] = self.delay_timer;
     }
 
     fn increment_addr_reg(&mut self, x: u8) {

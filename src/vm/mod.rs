@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{ self, Read, ErrorKind };
 use std::fmt;
 
-use log::{ info, error };
+use log::{ error };
 
 use crate::instructions::{ Instruction };
 
@@ -74,7 +74,6 @@ impl VM {
             return Ok(instruction);
         }
         self.execute(&instruction, bytes)?;
-        info!("(0x{:X}{:X} -> {}) Instruction executed", bytes.0, bytes.1, instruction);
         self.pc += 2;
         Ok(instruction)
     }
@@ -106,8 +105,9 @@ impl VM {
             Instruction::Draw { x, y, n } => self.draw(x, y, n),
             Instruction::SkipIfKeyPressed { x } => self.skip_key_pressed(x),
             Instruction::SkipIfNotKeyPressed { x } => self.skip_not_key_pressed(x),
-            Instruction::SetDelayTimer { x } => self.store_delay_timer(x),
-            Instruction::SetSoundTimer { x } => self.store_sound_timer(x),
+            Instruction::SetDelayTimer { x } => self.set_delay_timer(x),
+            Instruction::SetSoundTimer { x } => self.set_sound_timer(x),
+            Instruction::SetFromDelayTimer { x } => self.store_delay_timer(x),
             Instruction::AwaitKeyPressed { x } => self.wait_key_pressed(x),
             Instruction::AddToI { x } => self.increment_addr_reg(x),
             Instruction::SetIToSpriteAddress { x } => self.store_sprite_addr(x),
