@@ -46,12 +46,18 @@ pub struct VM {
 
 
 impl VM {
-    pub fn update_key_state(&mut self, key: usize, state: bool) -> Result<(), &'static str> {
-        if key > 15 {
-            return Err("Key not supported");
+    pub fn get_program(&self) -> Vec<String> {
+        let len = self.memory.len() - 1;
+        let mut program = vec![];
+        for x in (START_ADDR..len).step_by(2) {
+            let instruction = Instruction::from((self.memory[x], self.memory[x + 1]));
+
+            if instruction == Instruction::EndOfProgram {
+                break;
+            }
+            program.push(instruction.to_asm());
         }
-        self.input[key] = state;
-        Ok(())
+        program
     }
 
     pub fn run(&self) -> bool {

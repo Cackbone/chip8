@@ -209,6 +209,47 @@ impl fmt::Debug for Instruction {
 
 
 impl Instruction {
+    pub fn to_asm(&self) -> String {
+        match self {
+            Instruction::Clear => "CLS".to_owned(),
+            Instruction::Return => "RET".to_owned(),
+            Instruction::Goto { addr } => format!("JP 0x{:X}", addr),
+            Instruction::CallProgram { addr } => format!("SYS 0x{:X}", addr),
+            Instruction::CallSubroutine { addr } => format!("CALL 0x{:X}", addr),
+            Instruction::SkipEqualU8 { x, value } => format!("SE V{}, {}", x, value),
+            Instruction::SkipNotEqualU8 { x, value } => format!("SNE V{}, {}", x, value),
+            Instruction::SkipEqualReg { x, y } => format!("SE V{}, V{}", x, y),
+            Instruction::SetFromU8 { x, value } => format!("LD V{}, {}", x, value),
+            Instruction::AddU8 { x, value } => format!("ADD V{}, {}", x, value),
+            Instruction::SetFromReg { x, y } => format!("LD V{}, V{}", x, y),
+            Instruction::OrReg { x, y } => format!("OR V{}, V{}", x, y),
+            Instruction::AndReg { x, y } => format!("AND V{}, V{}", x, y),
+            Instruction::XorReg { x, y } => format!("XOR V{}, V{}", x, y),
+            Instruction::AddReg { x, y } => format!("ADD V{}, V{}", x, y),
+            Instruction::SubReg { x, y } => format!("SUB V{}, V{}", x, y),
+            Instruction::RevSubReg { x, y } => format!("SUBN V{}, V{}", x, y),
+            Instruction::ShiftRight { x } => format!("SHR V{}", x),
+            Instruction::ShiftLeft { x } => format!("SHL V{}", x),
+            Instruction::SkipNotEqualReg { x, y } => format!("SNE V{}, V{}", x, y),
+            Instruction::StoreAddress { addr } => format!("LD I, 0x{:X}", addr),
+            Instruction::JumpToAddress { addr } => format!("JP V0, 0x{:X}", addr),
+            Instruction::Rand { x, value } => format!("RND V{}, {}", x, value),
+            Instruction::Draw { x, y, n } => format!("DRW V{}, V{}, {}", x, y, n),
+            Instruction::SkipIfKeyPressed { x } => format!("SKP V{}", x),
+            Instruction::SkipIfNotKeyPressed { x } => format!("SKNP V{}", x),
+            Instruction::SetFromDelayTimer { x } => format!("LD V{}, DT", x),
+            Instruction::SetSoundTimer { x } => format!("LD ST, V{}", x),
+            Instruction::SetDelayTimer { x } => format!("LD DT, V{}", x),
+            Instruction::AwaitKeyPressed { x } => format!("LD V{}, K", x),
+            Instruction::AddToI { x } => format!("ADD I, V{}", x),
+            Instruction::SetIToSpriteAddress { x } => format!("LD F, V{}", x),
+            Instruction::StoreAtIAsDecimal { x } => format!("LD B, V{}", x),
+            Instruction::DumpToMemory { x } => format!("LD I, V{}", x),
+            Instruction::LoadFromMemory { x } => format!("LD V{}, I", x),
+            _ => "".to_owned()
+        }
+    }
+
     fn value_from(n1: u8, n2: u8) -> u8 {
         ((n1 << 4) & 0xF0) | (n2 & 0xF)
     }
