@@ -12,7 +12,7 @@ fn main() -> io::Result<()> {
 
     while vm.run() {
         vm.execute_next()?;
-        println!("{:?}", vm);
+        //println!("{:?}", vm);
     }
     Ok(())
 }

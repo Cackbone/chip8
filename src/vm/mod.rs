@@ -64,6 +64,7 @@ impl VM {
 
         if instruction == Instruction::EndOfProgram {
             self.state = false;
+            println!("end");
             return Ok(instruction);
         }
         self.execute(&instruction, bytes)?;
@@ -92,6 +93,21 @@ impl VM {
             Instruction::RevSubReg { x, y } => self.revsub(x, y),
             Instruction::ShiftRight { x } => self.shift_right(x),
             Instruction::ShiftLeft { x } => self.shift_left(x),
+            Instruction::SkipNotEqualReg { x, y } => self.skip_not_equal(self.regs[x as usize], self.regs[y as usize]),
+            Instruction::StoreAddress { addr } => self.store_address(addr),
+            Instruction::JumpToAddress { addr } => self.jump(addr),
+            Instruction::Rand { x, value } => self.rand(x, value),
+            Instruction::Draw { x, y, n } => self.draw(x, y, n),
+            Instruction::SkipIfKeyPressed { x } => self.skip_key_pressed(x),
+            Instruction::SkipIfNotKeyPressed { x } => self.skip_not_key_pressed(x),
+            Instruction::SetDelayTimer { x } => self.store_delay_timer(x),
+            Instruction::SetSoundTimer { x } => self.store_sound_timer(x),
+            Instruction::AwaitKeyPressed { x } => self.wait_key_pressed(x),
+            Instruction::AddToI { x } => self.increment_addr_reg(x),
+            Instruction::SetIToSpriteAddress { x } => self.store_sprite_addr(x),
+            Instruction::StoreAtIAsDecimal { x } => self.bcd(x),
+            Instruction::DumpToMemory { x } => self.register_dump(x),
+            Instruction::LoadFromMemory { x } => self.register_load(x),
             _ => {
                 error!(
                     "Error: (0x{:X}{:X} -> {}) Bad instruction",

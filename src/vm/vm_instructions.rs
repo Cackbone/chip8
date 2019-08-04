@@ -1,3 +1,5 @@
+use rand::{ self, Rng };
+
 use crate::vm::{ VM };
 
 pub trait VmInstructions {
@@ -16,6 +18,20 @@ pub trait VmInstructions {
     fn xor(&mut self, x: u8, y: u8);
     fn shift_right(&mut self, x: u8);
     fn shift_left(&mut self, x: u8);
+    fn store_address(&mut self, addr: u16);
+    fn jump(&mut self, addr: u16);
+    fn rand(&mut self, x: u8, value: u8);
+    fn draw(&mut self, x: u8, y: u8, nibble: u8);
+    fn skip_key_pressed(&mut self, x: u8);
+    fn skip_not_key_pressed(&mut self, x: u8);
+    fn store_delay_timer(&mut self, x: u8);
+    fn wait_key_pressed(&mut self, x: u8);
+    fn store_sound_timer(&mut self, x: u8);
+    fn increment_addr_reg(&mut self, x: u8);
+    fn store_sprite_addr(&mut self, x: u8);
+    fn bcd(&mut self, x: u8);
+    fn register_dump(&mut self, x: u8);
+    fn register_load(&mut self, x: u8);
 }
 
 impl VmInstructions for VM {
@@ -112,6 +128,87 @@ impl VmInstructions for VM {
         // Set carry to lsb of Vx
         self.regs[last] = self.regs[ix] & 1;
         self.regs[ix] <<= 1;
+    }
+
+    fn store_address(&mut self, addr: u16) {
+        self.i = addr;
+    }
+
+    fn jump(&mut self, addr: u16) {
+        self.pc = self.regs[0] as usize + addr as usize;
+    }
+
+    fn rand(&mut self, x: u8, value: u8) {
+        let mut rng = rand::thread_rng();
+        self.regs[x as usize] = rng.gen_range(0, 255) & value;
+    }
+
+    fn draw(&mut self, x: u8, y: u8, nibble: u8) {
+        // todo
+        println!("draw");
+    }
+
+    fn skip_key_pressed(&mut self, x: u8) {
+        let idx = self.regs[x as usize] as usize;
+
+        if self.input[idx] {
+            self.pc += 2;
+        }
+    }
+
+    fn skip_not_key_pressed(&mut self, x: u8) {
+        let idx = self.regs[x as usize] as usize;
+
+        if !self.input[idx] {
+            self.pc += 2;
+        }
+    }
+
+    fn store_delay_timer(&mut self, x: u8) {
+        self.regs[x as usize] = self.delay_timer;
+    }
+
+    fn wait_key_pressed(&mut self, x: u8) {
+        // todo
+        println!("wait key");
+    }
+
+    fn store_sound_timer(&mut self, x: u8) {
+        self.regs[x as usize] = self.sound_timer;
+    }
+
+    fn increment_addr_reg(&mut self, x: u8) {
+        self.i += self.regs[x as usize] as u16;
+    }
+
+    fn store_sprite_addr(&mut self, x: u8) {
+        // todo
+    }
+
+    fn bcd(&mut self, x: u8) {
+        let vx = self.regs[x as usize];
+        let x_bcd = ((vx / 100) % 10, (vx / 10) % 10, vx % 10);
+        let idx = self.i as usize;
+
+        self.memory[idx] = x_bcd.0;
+        self.memory[idx + 1] = x_bcd.1;
+        self.memory[idx + 2] = x_bcd.2;
+    }
+
+    fn register_dump(&mut self, x: u8) {
+        let mut idx = self.i as usize;
+        for j in 0..(x as usize) {
+            self.memory[idx] = self.regs[j];
+            idx += 1;
+        }
+    }
+
+    fn register_load(&mut self, x: u8) {
+        let mut idx = self.i as usize;
+        for j in 0..(x as usize) {
+            self.regs[j] = self.memory[idx];
+            idx += 1;
+        }
     }
 }
 
